@@ -14,7 +14,7 @@ https://tereresecurity.wordpress.com/
 - [X] 01 - Convert hex to base64
 - [X] 02 - Fixed XOR
 - [X] 03 - Single-byte XOR cipher
-- [ ] 04 - Detect single-character XOR
+- [X] 04 - Detect single-character XOR
 - [ ] 05 - Implement repeating-key XOR
 - [ ] 06 - Break repeating-key XOR
 - [ ] 07 - AES in ECB mode
