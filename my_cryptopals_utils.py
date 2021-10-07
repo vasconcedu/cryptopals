@@ -165,6 +165,34 @@ class SingleByteXORCryptanalysis:
             s = abs(p[k] - q[k])
         return s / len(p)
 
+# Repeating-key XOR encryption/decryption routines 
+# resulting from challenge 05 - Implement repeating-key 
+# XOR
+
+class RepeatingKeyXOR:
+
+    def __init__(self):
+        return
+
+    def encrypt(self, plaintext, key):
+
+        expanded_key = self.expand_key(key, len(plaintext))
+        return xor(plaintext, expanded_key)
+
+    def decrypt(self, ciphertext, key):
+
+        expanded_key = self.expand_key(key, len(ciphertext))
+        return xor(ciphertext, expanded_key)
+
+    def expand_key(self, key, length):
+
+        expanded_key = ''
+
+        for i in range(0, length):
+            expanded_key = expanded_key + chr(key[i % len(key)])
+            
+        return bytes(expanded_key, 'utf-8')
+
 # Test if my_cryptopals_utils was imported successfully 
 def test_my_cryptopals_utils():
     print('[my_cryptopals_utils] Good to go!')
