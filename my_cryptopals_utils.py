@@ -106,9 +106,8 @@ class SingleByteXORCryptanalysis:
         
         for l in plaintext:
             
-            # Keep printable letter counts 
+            # Keep printable letter counts
             if int(l) in range(97, 123): # From 'a' to 'z'
-                # TODO convert all to lower case and count upper case letter occurrences as well
                 plaintext_letter_count[chr(l)] = plaintext_letter_count[chr(l)] + 1
 
         printable_count = 0
@@ -125,12 +124,9 @@ class SingleByteXORCryptanalysis:
         
         for l in plaintext:
             
-            # Keep account of printable letter
+            # Keep account of printable letters
             if int(l) in range(97, 123): # From 'a' to 'z'
                 plaintext_letter_count[chr(l)] = plaintext_letter_count[chr(l)] + 1
-
-            if int(l) in range(65, 90): # From 'A' to 'Z'
-                plaintext_letter_count[chr(l + 32)] = plaintext_letter_count[chr(l + 32)] + 1
 
         printable_letter_count = 0
 
@@ -150,9 +146,6 @@ class SingleByteXORCryptanalysis:
             # Keep letter frequencies 
             if int(l) in range(97, 123): # From 'a' to 'z'
                 plaintext_letter_frequencies[chr(l)] = plaintext_letter_frequencies[chr(l)] + 1. / len(plaintext)
-
-            if int(l) in range(65, 90): # From 'A' to 'Z'
-                plaintext_letter_frequencies[chr(l + 32)] = plaintext_letter_frequencies[chr(l + 32)] + 1. / len(plaintext)
 
             # Check for space occurrences 
             if l == 32: # Space 
