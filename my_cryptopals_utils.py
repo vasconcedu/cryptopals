@@ -39,6 +39,27 @@ def xor(a, b): # Raw byte array arguments
         c.append(operator.xor(a[i], b[i]))
     return bytes(c)
 
+# Hamming distance routine between two bytes
+# resulting from challenge 06 - Break repeating 
+# key XOR
+
+def hamming_distance_bytes(a, b):
+    d = 0
+    for i in [1, 2, 4, 8, 16, 32, 64, 128]: # Masks 
+        if (a & i) != (b & i):
+            d = d + 1
+    return d 
+
+# Hamming distance routine between two byte arrays
+# resulting from challenge 06 - Break repeating 
+# key XOR
+
+def hamming_distance(a, b):
+    d = 0
+    for i in range(0, len(a)):
+        d = d + hamming_distance_bytes(a[i], b[i])
+    return d 
+
 # Single-byte XOR cryptanalysis routine resulting
 # from challenge 03 - Single-byte XOR cipher
 
@@ -190,8 +211,31 @@ class RepeatingKeyXOR:
 
         for i in range(0, length):
             expanded_key = expanded_key + chr(key[i % len(key)])
-            
+
         return bytes(expanded_key, 'utf-8')
+
+# Repeating-key XOR cryptanalysis routine resulting
+# from challenge 06 - Break repeating-key XOR 
+
+class RepeatingKeyXORCryptanalysis:
+
+    ciphertext = None 
+    key_size_lower = None
+    key_size_upper = None
+
+    def __init__(self, ciphertext, key_size_lower, key_size_upper):
+        self.ciphertext = ciphertext
+        self.key_size_lower = key_size_lower
+        self.key_size_upper = key_size_upper
+        return 
+
+    def break_ciphertext(self):
+        self.search_key_size()
+
+    def search_key_size(self):
+        for key_size in range(self.key_size_lower, self.key_size_upper + 1):
+            """ TODO implement """
+        return
 
 # Test if my_cryptopals_utils was imported successfully 
 def test_my_cryptopals_utils():
