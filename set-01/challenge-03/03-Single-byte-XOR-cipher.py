@@ -35,12 +35,26 @@ def __main__():
     candidates = SingleByteXORCryptanalysis(hex_to_raw_bytes(CIPHERTEXT), 
         strategy=SingleByteXORCryptanalysis.PRINTABLE_LETTER_COUNT,
         strategy_bundle={
-            'count_threshold': .7 
+            'count_threshold': .79 
         },
         verbose=False 
     ).break_ciphertext()
 
     print("[+] Best candidates are:\n")
+    for c in candidates:
+        print("[+] {}".format(c))
+
+    print("\n[+] Printable letter count best fit heuristic...\n")
+
+    candidates = SingleByteXORCryptanalysis(hex_to_raw_bytes(CIPHERTEXT), 
+        strategy=SingleByteXORCryptanalysis.PRINTABLE_LETTER_COUNT_BEST_FIT,
+        strategy_bundle={
+            'count_threshold': .79 
+        },
+        verbose=False 
+    ).break_ciphertext()
+
+    print("[+] Best candidate is:\n")
     for c in candidates:
         print("[+] {}".format(c))
 

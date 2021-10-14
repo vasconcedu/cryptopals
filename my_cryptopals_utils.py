@@ -2,6 +2,7 @@
 
 import base64
 import operator 
+import math
 
 # Useful conversion methods resulting 
 # from challenge 01 - Convert hex to Base64
@@ -60,6 +61,25 @@ def hamming_distance(a, b):
         d = d + hamming_distance_bytes(a[i], b[i])
     return d 
 
+# Slice array a in given number of blocks n, from
+# challenge 06 - Break repeating key XOR. By default, 
+# this will truncate array a in case the length of 
+# the last portion of bytes is lower than the 
+# required number of bytes for even block sizes. To 
+# prevent truncation, use truncate=False
+
+def slice_in_blocks_of_n_size(a, n, truncate=True):
+    blocks = []
+    lower_index = 0
+    upper_index = n
+    while upper_index < len(a):
+        blocks.append(a[lower_index:upper_index])
+        lower_index = upper_index
+        upper_index = upper_index + n
+    if lower_index < len(a) and truncate == False:
+        blocks.append(a[lower_index:])
+    return blocks
+
 # Single-byte XOR cryptanalysis routine resulting
 # from challenge 03 - Single-byte XOR cipher
 
@@ -78,9 +98,12 @@ class SingleByteXORCryptanalysis:
         'a': 0, 'b': 0, 'c': 0, 'd': 0, 'e': 0, 'f': 0, 'g': 0, 'h': 0, 'i': 0, 'j': 0, 'k': 0, 'l': 0, 'm': 0, 'n': 0, 'o': 0, 'p': 0, 'q': 0, 'r': 0, 's': 0, 't': 0, 'u': 0, 'v': 0, 'w': 0, 'x': 0, 'y': 0, 'z': 0
     }
 
+    # Quite helpful to enhance candidate results (check if plaintext contains any of the following)
+    BAD_CHARS = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0b, 0x0c, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1f, 0x7f]
+
     MEAN_ABSOLUTE_ERROR = 'mean_absolute_error'
     PRINTABLE_LETTER_COUNT = 'printable_letter_count'
-    PRINTABLE_LETTER_COUNT_BEST_FIT = 'printable_letter_count'
+    PRINTABLE_LETTER_COUNT_BEST_FIT = 'printable_letter_count_best_fit'
 
     ciphertext = None
     strategy = None
@@ -115,14 +138,18 @@ class SingleByteXORCryptanalysis:
             if self.verbose: # Print candidate key along with the corresponding plaintext
                 print("[my_cryptopals_utils][SingleByteXORCryptanalysis] key:'{}', plaintext: {}".format(chr(k), plaintext))
 
-            if (self.strategy == self.MEAN_ABSOLUTE_ERROR and self.mean_absolute_error_cryptanalysis(plaintext, self.strategy_bundle['error_threshold'], letter_dictionary)) or (self.strategy == self.PRINTABLE_LETTER_COUNT and self.printable_letter_count_cryptanalysis(plaintext, self.strategy_bundle['count_threshold'], letter_dictionary)):
+            if (self.strategy == self.MEAN_ABSOLUTE_ERROR and self.mean_absolute_error_cryptanalysis(plaintext, self.strategy_bundle['error_threshold'], letter_dictionary)) or ((self.strategy == self.PRINTABLE_LETTER_COUNT or self.strategy == self.PRINTABLE_LETTER_COUNT_BEST_FIT) and self.printable_letter_count_cryptanalysis(plaintext, self.strategy_bundle['count_threshold'], letter_dictionary)):
                     self.candidates.append({
                         'key': k,
                         'plaintext': plaintext
                     })
 
+        if self.strategy == self.PRINTABLE_LETTER_COUNT_BEST_FIT:
+            self.candidates = self.printable_letter_count_best_fit()
+
         return self.candidates
 
+    # Much better than MAE 
     def printable_letter_count_cryptanalysis(self, plaintext, count_threshold, plaintext_letter_count):
         
         for l in plaintext:
@@ -130,6 +157,9 @@ class SingleByteXORCryptanalysis:
             # Keep printable letter counts
             if int(l) in range(97, 123): # From 'a' to 'z'
                 plaintext_letter_count[chr(l)] = plaintext_letter_count[chr(l)] + 1
+
+            if int(l) in range(65, 91): # From 'A' to 'Z'
+                plaintext_letter_count[chr(l + 32)] = plaintext_letter_count[chr(l + 32)] + 1
 
         printable_count = 0
 
@@ -141,34 +171,42 @@ class SingleByteXORCryptanalysis:
 
         return False
 
-    def printable_letter_count_cryptanalysis_best_fit(self, plaintext, count_threshold, plaintext_letter_count):
-        
-        for l in plaintext:
-            
-            # Keep account of printable letters
-            if int(l) in range(97, 123): # From 'a' to 'z'
-                plaintext_letter_count[chr(l)] = plaintext_letter_count[chr(l)] + 1
-
-        printable_letter_count = 0
-
-        for l in plaintext_letter_count:
-            printable_letter_count = printable_letter_count + plaintext_letter_count[l]
-
-        if printable_letter_count >= (len(plaintext) * count_threshold):
-            return True 
-
-        return False
     
+    # Work on top of printable_letter_count_cryptanalysis
+    # results to get best fit candidates only       
+    # TODO I could actually use this to enhance MAE too 
+    def printable_letter_count_best_fit(self):
+        best_fit_score = math.inf
+        best_fit_candidate = None
+        for candidate in self.candidates:
+            candidate_score = 0
+            for l in candidate['plaintext']:
+                if int(l) in self.BAD_CHARS: # Bad chars (probably not in plaintext)
+                    candidate_score = candidate_score + 1
+                if int(l) == 32: # Space, good sign 
+                    candidate_score = candidate_score - 1
+            if candidate_score < best_fit_score:
+                best_fit_score = candidate_score
+                best_fit_candidate = candidate
+
+        return [best_fit_candidate]
+    
+    # This is not satisfactory at all, at least as is 
+    # TODO check out idea on printable_letter_count_best_fit
     def mean_absolute_error_cryptanalysis(self, plaintext, error_threshold, plaintext_letter_frequencies):
 
         spaces_occur = False 
 
         for l in plaintext:
-            # Keep letter frequencies 
+            
+            # Keep printable letter frequencies 
             if int(l) in range(97, 123): # From 'a' to 'z'
                 plaintext_letter_frequencies[chr(l)] = plaintext_letter_frequencies[chr(l)] + 1. / len(plaintext)
 
-            # Check for space occurrences 
+            if int(l) in range(65, 91): # From 'A' to 'Z'
+                plaintext_letter_frequencies[chr(l + 32)] = plaintext_letter_frequencies[chr(l + 32)] + 1. / len(plaintext)
+
+            # Check for space occurrences. This enhances MAE peformance A LOT
             if l == 32: # Space 
                 spaces_occur = True
 
@@ -222,20 +260,58 @@ class RepeatingKeyXORCryptanalysis:
     ciphertext = None 
     key_size_lower = None
     key_size_upper = None
+    verbose = None
 
-    def __init__(self, ciphertext, key_size_lower, key_size_upper):
+    def __init__(self, ciphertext, key_size_lower, key_size_upper, verbose=False):
         self.ciphertext = ciphertext
         self.key_size_lower = key_size_lower
         self.key_size_upper = key_size_upper
-        return 
+        self.verbose = verbose
 
     def break_ciphertext(self):
-        self.search_key_size()
+        key_size, _ = self.search_key_size()
+        blocks = slice_in_blocks_of_n_size(self.ciphertext, key_size, truncate=False)
+        key = []
+        for i in range(0, key_size):
+            single_byte_xor_ciphertext_list = []
+            for block in blocks:
+                if i < len(block):
+                    single_byte_xor_ciphertext_list.append(block[i])
+            single_byte_xor_ciphertext = bytes(single_byte_xor_ciphertext_list)
+            candidate = SingleByteXORCryptanalysis(single_byte_xor_ciphertext, 
+                strategy=SingleByteXORCryptanalysis.PRINTABLE_LETTER_COUNT_BEST_FIT,
+                strategy_bundle={
+                    'count_threshold': .6
+                },
+                verbose=False 
+            ).break_ciphertext()
+            if(self.verbose):
+                print("[my_cryptopals_utils][RepeatingKeyXORCryptanalysis] Best candidate is: {}\n".format(candidate[0]))
+            if candidate[0] != None:
+                key.append(candidate[0]['key'])
+            else:
+                key.append(95) # Watch out! Could not break this byte! 95 => '_'
+        return bytes(key)
 
     def search_key_size(self):
+        best_normalized_average_distance = math.inf
+        best_key_size = None
         for key_size in range(self.key_size_lower, self.key_size_upper + 1):
-            """ TODO implement """
-        return
+            # Sliding window 
+            blocks = slice_in_blocks_of_n_size(self.ciphertext, key_size)
+            distance = 0
+            for i in range(0, len(blocks) - 1):
+                distance = distance + hamming_distance(blocks[i], blocks[i + 1])
+            average_distance = distance / float(len(blocks))
+            normalized_average_distance = average_distance / float(key_size)
+            if self.verbose:
+                print("[my_cryptopals_utils][RepeatingKeyXORCryptanalysis] key size: {}, normalized average Hamming distance: {}".format(key_size, normalized_average_distance))
+            if normalized_average_distance < best_normalized_average_distance:
+                best_normalized_average_distance = normalized_average_distance
+                best_key_size = key_size
+        if self.verbose:
+            print("[my_cryptopals_utils][RepeatingKeyXORCryptanalysis] *** best key size: {}, best normalized average Hamming distance: {} ***".format(best_key_size, best_normalized_average_distance))
+        return best_key_size, best_normalized_average_distance
 
 # Test if my_cryptopals_utils was imported successfully 
 def test_my_cryptopals_utils():

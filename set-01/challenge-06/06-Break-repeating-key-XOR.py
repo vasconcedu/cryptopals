@@ -8,11 +8,11 @@ from my_cryptopals_utils import *
 # This challenge consists in 
 # breaking repeating-key XOR 
 
-INPUT_CIPHERTEXT = """0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f"""
+INPUT_CIPHERTEXT = open('6.txt', 'r').read()
 
 def __main__():
 
-    print("[+] Cryptopals 05 - Implement repeating-key XOR\n")
+    print("[+] Cryptopals 06 - Break repeating-key XOR\n")
 
     print("[+] Running tests...\n")
 
@@ -24,9 +24,20 @@ def __main__():
     print("[+] Test #5: Hamming distance. H('w', '$') = {}, should be 4".format(hamming_distance(bytes('w', 'utf-8'), bytes('$', 'utf-8')))) # 4
     print("[+] Test #6: Hamming distance. H('this is a test', 'wokka wokka!!!') = {}, should be 37".format(hamming_distance(bytes('this is a test', 'utf-8'), bytes('wokka wokka!!!', 'utf-8')))) # 37
 
-    print("\n[+] Running cryptanalysis...\n")
+    print("\n[+] Running cryptanalysis, using PRINTABLE_LETTER_COUNT_BEST_FIT single-byte XOR heuristic...\n")
 
-    # TODO change 
-    RepeatingKeyXORCryptanalysis(hex_to_raw_bytes(INPUT_CIPHERTEXT), 2, 40).break_ciphertext()
+    key = RepeatingKeyXORCryptanalysis(
+        base_64_to_raw_bytes(INPUT_CIPHERTEXT), # Ciphertext 
+        2, # Lower bound key size
+        40, # Upper bound key size 
+        verbose=False 
+    ).break_ciphertext()
+
+    print("[+] Best key is:\n\n[+] Hex: {}\n[+] Base64: {}\n[+] Raw: {}".format(raw_bytes_to_hex(key), raw_bytes_to_base_64(key), key))
+
+    print("\n[+] Attempting to decrypt ciphertext using best key...")
+
+    # Now I DO deserve some expensive wine this weekend 
+    print("\n[+] Ciphertext is:\n\n{}".format(RepeatingKeyXOR().decrypt(base_64_to_raw_bytes(INPUT_CIPHERTEXT), key).decode('utf-8')))
 
 __main__()

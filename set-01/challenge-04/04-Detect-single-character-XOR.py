@@ -26,7 +26,7 @@ def __main__():
             # the printable letter count heuristic 
 
             candidates = SingleByteXORCryptanalysis(hex_to_raw_bytes(ciphertext), 
-                strategy=SingleByteXORCryptanalysis.PRINTABLE_LETTER_COUNT,
+                strategy=SingleByteXORCryptanalysis.PRINTABLE_LETTER_COUNT_BEST_FIT,
                 strategy_bundle={
                     'count_threshold': .7 
                 },

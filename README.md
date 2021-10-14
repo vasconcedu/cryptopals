@@ -16,7 +16,7 @@ https://tereresecurity.wordpress.com/
 - [X] 03 - Single-byte XOR cipher
 - [X] 04 - Detect single-character XOR
 - [X] 05 - Implement repeating-key XOR
-- [ ] 06 - Break repeating-key XOR
+- [X] 06 - Break repeating-key XOR
 - [ ] 07 - AES in ECB mode
 - [ ] 08 - Detect AES in ECB mode
 
