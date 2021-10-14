@@ -69,15 +69,19 @@ def hamming_distance(a, b):
 # prevent truncation, use truncate=False
 
 def slice_in_blocks_of_n_size(a, n, truncate=True):
+
     blocks = []
     lower_index = 0
     upper_index = n
+
     while upper_index < len(a):
         blocks.append(a[lower_index:upper_index])
         lower_index = upper_index
         upper_index = upper_index + n
+
     if lower_index < len(a) and truncate == False:
         blocks.append(a[lower_index:])
+        
     return blocks
 
 # Single-byte XOR cryptanalysis routine resulting
@@ -176,15 +180,22 @@ class SingleByteXORCryptanalysis:
     # results to get best fit candidates only       
     # TODO I could actually use this to enhance MAE too 
     def printable_letter_count_best_fit(self):
+
         best_fit_score = math.inf
         best_fit_candidate = None
+
         for candidate in self.candidates:
+
             candidate_score = 0
+
             for l in candidate['plaintext']:
+
                 if int(l) in self.BAD_CHARS: # Bad chars (probably not in plaintext)
                     candidate_score = candidate_score + 1
+
                 if int(l) == 32: # Space, good sign 
                     candidate_score = candidate_score - 1
+
             if candidate_score < best_fit_score:
                 best_fit_score = candidate_score
                 best_fit_candidate = candidate
@@ -269,14 +280,19 @@ class RepeatingKeyXORCryptanalysis:
         self.verbose = verbose
 
     def break_ciphertext(self):
+
         key_size, _ = self.search_key_size()
         blocks = slice_in_blocks_of_n_size(self.ciphertext, key_size, truncate=False)
         key = []
+
         for i in range(0, key_size):
+
             single_byte_xor_ciphertext_list = []
+
             for block in blocks:
                 if i < len(block):
                     single_byte_xor_ciphertext_list.append(block[i])
+
             single_byte_xor_ciphertext = bytes(single_byte_xor_ciphertext_list)
             candidate = SingleByteXORCryptanalysis(single_byte_xor_ciphertext, 
                 strategy=SingleByteXORCryptanalysis.PRINTABLE_LETTER_COUNT_BEST_FIT,
@@ -285,32 +301,44 @@ class RepeatingKeyXORCryptanalysis:
                 },
                 verbose=False 
             ).break_ciphertext()
+
             if(self.verbose):
                 print("[my_cryptopals_utils][RepeatingKeyXORCryptanalysis] Best candidate is: {}\n".format(candidate[0]))
+            
             if candidate[0] != None:
                 key.append(candidate[0]['key'])
             else:
                 key.append(95) # Watch out! Could not break this byte! 95 => '_'
+
         return bytes(key)
 
     def search_key_size(self):
+
         best_normalized_average_distance = math.inf
         best_key_size = None
+
         for key_size in range(self.key_size_lower, self.key_size_upper + 1):
+
             # Sliding window 
             blocks = slice_in_blocks_of_n_size(self.ciphertext, key_size)
             distance = 0
+
             for i in range(0, len(blocks) - 1):
                 distance = distance + hamming_distance(blocks[i], blocks[i + 1])
+
             average_distance = distance / float(len(blocks))
             normalized_average_distance = average_distance / float(key_size)
+
             if self.verbose:
                 print("[my_cryptopals_utils][RepeatingKeyXORCryptanalysis] key size: {}, normalized average Hamming distance: {}".format(key_size, normalized_average_distance))
+
             if normalized_average_distance < best_normalized_average_distance:
                 best_normalized_average_distance = normalized_average_distance
                 best_key_size = key_size
+
         if self.verbose:
             print("[my_cryptopals_utils][RepeatingKeyXORCryptanalysis] *** best key size: {}, best normalized average Hamming distance: {} ***".format(best_key_size, best_normalized_average_distance))
+
         return best_key_size, best_normalized_average_distance
 
 # Test if my_cryptopals_utils was imported successfully 
