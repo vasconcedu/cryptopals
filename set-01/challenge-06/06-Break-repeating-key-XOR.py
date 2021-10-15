@@ -31,7 +31,7 @@ def __main__():
         2, # Lower bound key size
         40, # Upper bound key size 
         verbose=False 
-    ).break_ciphertext()
+    ).break_ciphertext(count_threshold=.5) # For best fit, it seems that the lower the better 
 
     print("[+] Best key is:\n\n[+] Hex: {}\n[+] Base64: {}\n[+] Raw: {}".format(raw_bytes_to_hex(key), raw_bytes_to_base_64(key), key))
 

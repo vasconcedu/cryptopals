@@ -33,7 +33,7 @@ def __main__():
                 verbose=False 
             ).break_ciphertext()
 
-            if len(candidates) >= 1:
+            if len(candidates) >= 1 and candidates[0] != None:
                 print("[+] Ciphertext {} yielded the following candidates:\n".format(ciphertext))
                 for candidate in candidates:
                     print("[+]     {}".format(candidate))

@@ -81,7 +81,7 @@ def slice_in_blocks_of_n_size(a, n, truncate=True):
 
     if lower_index < len(a) and truncate == False:
         blocks.append(a[lower_index:])
-        
+
     return blocks
 
 # Single-byte XOR cryptanalysis routine resulting
@@ -279,7 +279,7 @@ class RepeatingKeyXORCryptanalysis:
         self.key_size_upper = key_size_upper
         self.verbose = verbose
 
-    def break_ciphertext(self):
+    def break_ciphertext(self, count_threshold=.6):
 
         key_size, _ = self.search_key_size()
         blocks = slice_in_blocks_of_n_size(self.ciphertext, key_size, truncate=False)
@@ -297,7 +297,7 @@ class RepeatingKeyXORCryptanalysis:
             candidate = SingleByteXORCryptanalysis(single_byte_xor_ciphertext, 
                 strategy=SingleByteXORCryptanalysis.PRINTABLE_LETTER_COUNT_BEST_FIT,
                 strategy_bundle={
-                    'count_threshold': .6
+                    'count_threshold': count_threshold
                 },
                 verbose=False 
             ).break_ciphertext()

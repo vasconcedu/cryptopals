@@ -17,7 +17,7 @@ https://tereresecurity.wordpress.com/
 - [X] 04 - Detect single-character XOR
 - [X] 05 - Implement repeating-key XOR
 - [X] 06 - Break repeating-key XOR
-- [ ] 07 - AES in ECB mode
+- [X] 07 - AES in ECB mode
 - [ ] 08 - Detect AES in ECB mode
 
 ## Set 02: Block crypto
