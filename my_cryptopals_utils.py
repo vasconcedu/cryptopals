@@ -99,6 +99,14 @@ def count_repeating_blocks(a): # a: byte array
 
     return repetitions
 
+# Perfoms PKCS#7 padding of string a 
+# to block size s
+def pkcs_7_padding(a, s):
+    b = a 
+    while len(b) % s != 0:
+        b = b + "\x04"
+    return b 
+
 # Single-byte XOR cryptanalysis routine resulting
 # from challenge 03 - Single-byte XOR cipher
 
