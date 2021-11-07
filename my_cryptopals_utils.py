@@ -84,6 +84,21 @@ def slice_in_blocks_of_n_size(a, n, truncate=True):
 
     return blocks
 
+# Count repeating blocks in ciphertext, 
+# from challenge 08 - Detect AES in ECB mode 
+def count_repeating_blocks(a): # a: byte array
+
+    blocks = slice_in_blocks_of_n_size(a, 2)
+
+    repetitions = 0
+
+    for block_i in blocks: # For each block 
+        for block_j in blocks: # Count how many times it occurs 
+            if block_j == block_i:
+                repetitions = repetitions + 1 
+
+    return repetitions
+
 # Single-byte XOR cryptanalysis routine resulting
 # from challenge 03 - Single-byte XOR cipher
 

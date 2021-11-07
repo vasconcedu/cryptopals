@@ -28,7 +28,7 @@ def __main__():
             candidates = SingleByteXORCryptanalysis(hex_to_raw_bytes(ciphertext), 
                 strategy=SingleByteXORCryptanalysis.PRINTABLE_LETTER_COUNT_BEST_FIT,
                 strategy_bundle={
-                    'count_threshold': .7 
+                    'count_threshold': .8
                 },
                 verbose=False 
             ).break_ciphertext()
