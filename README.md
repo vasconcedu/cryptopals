@@ -23,7 +23,7 @@ https://tereresecurity.wordpress.com/
 ## Set 02: Block crypto
 
 - [X] 09 - Implement PKCS#7 padding
-- [ ] 10 - Implement CBC mode
+- [X] 10 - Implement CBC mode
 - [ ] 11 - An ECB/CBC detection oracle
 - [ ] 12 - Byte-at-a-time ECB decryption (Simple)
 - [ ] 13 - ECB cut-and-paste

@@ -4,6 +4,8 @@ import base64
 import operator 
 import math
 
+from Crypto.Cipher import AES
+
 # Useful conversion methods resulting 
 # from challenge 01 - Convert hex to Base64
 
@@ -68,6 +70,8 @@ def hamming_distance(a, b):
 # required number of bytes for even block sizes. To 
 # prevent truncation, use truncate=False
 
+# TODO there seems to be a bug here, needs further testing
+
 def slice_in_blocks_of_n_size(a, n, truncate=True):
 
     blocks = []
@@ -100,12 +104,91 @@ def count_repeating_blocks(a): # a: byte array
     return repetitions
 
 # Perfoms PKCS#7 padding of string a 
-# to block size s
+# to block size s, from challenge 
+# 10 - Implement CBC mode 
 def pkcs_7_padding(a, s):
     b = a 
     while len(b) % s != 0:
         b = b + "\x04"
     return b 
+
+# Perfoms PKCS#7 unpadding of string, 
+# from challenge 07 - AES in ECB mode 
+def pkcs_7_unpad(a):
+    return a.replace(b"\x04", b"")
+
+# Encrypt block using AES in ECB mode, 
+# from challenge 10 - Implement CBC mode
+def encrypt_block_in_ecb_mode(b, k): # b: plaintext block, k: key 
+    return AES.new(k, AES.MODE_ECB).encrypt(b)
+
+# Decrypt block using AES in ECB mode, 
+# from challenge 10 - Implement CBC mode
+def decrypt_block_in_ecb_mode(b, k): # b: plaintext block, k: key 
+    return AES.new(k, AES.MODE_ECB).decrypt(b)
+
+# Decrypt ciphertext using AES in CBC mode, 
+# from challenge 10 - Implement CBC mode
+def decrypt_plaintext_in_cbc_mode(c, k, iv): # c: ciphertext string, k: key string, iv: initialization vector bytes 
+
+    p = [] # Ciphertext
+
+    # Step 1. split ciphertext into blocks 
+    # of 128 bits (or 16 bytes)
+    b = slice_in_blocks_of_n_size(c, 16, truncate=False)
+
+    # Step 2. Set initial IV,
+    iv_i = iv
+    # then for each block: 
+    for b_i in b:
+        
+        # Step 2.1. Compute c_i = ECB(b_i, k)
+        c_i = decrypt_block_in_ecb_mode(b_i, k)
+
+        # Step 2.2. p_i = iv_i ^ c_i
+        p_i = xor(iv_i, c_i)
+
+        # Step 2.3. Update IV
+        iv_i = b_i
+    
+        # Step 2.4. p += p_i (append p_i to plaintext)
+        p.append(p_i)
+
+    p = b''.join(p)
+
+    # Step 3. Unpad 
+    return pkcs_7_unpad(p)
+
+# Encrypt plaintext using AES in CBC mode, 
+# from challenge 10 - Implement CBC mode
+def encrypt_plaintext_in_cbc_mode(p, k, iv): # p: plaintext string, k: key string, iv: initialization vector bytes 
+
+    c = [] # Ciphertext
+
+    # Step 1. Pad to 16 bytes 
+    p = pkcs_7_padding(p, 16)
+
+    # Step 2. split plaintext into blocks 
+    # of 128 bits (or 16 bytes)
+    b = slice_in_blocks_of_n_size(p, 16, truncate=False)
+
+    # Step 3. Set initial IV,
+    iv_i = iv
+    # then for each block:
+    for b_i in b:
+        # Step 3.1. Compute p_i = iv_i ^ b_i
+        p_i = xor(iv_i, bytes(b_i, 'utf-8'))
+
+        # Step 3.2. c_i = ECB(p_i, k)
+        c_i = encrypt_block_in_ecb_mode(p_i, k)
+
+        # Step 3.3. Update IV
+        iv_i = c_i
+    
+        # Step 3.4. c += c_i (append c_i to ciphertext)
+        c.append(c_i)
+
+    return b''.join(c)
 
 # Single-byte XOR cryptanalysis routine resulting
 # from challenge 03 - Single-byte XOR cipher
