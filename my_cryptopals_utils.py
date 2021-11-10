@@ -105,7 +105,7 @@ def count_repeating_blocks(a): # a: byte array
 
 # Perfoms PKCS#7 padding of string a 
 # to block size s, from challenge 
-# 10 - Implement CBC mode 
+# 07 - AES in ECB mode 
 def pkcs_7_padding(a, s):
     b = a 
     while len(b) % s != 0:
@@ -113,7 +113,7 @@ def pkcs_7_padding(a, s):
     return b 
 
 # Perfoms PKCS#7 unpadding of string, 
-# from challenge 07 - AES in ECB mode 
+# from challenge 10 - Implement CBC mode
 def pkcs_7_unpad(a):
     return a.replace(b"\x04", b"")
 
