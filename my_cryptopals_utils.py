@@ -3,6 +3,7 @@
 import base64
 import operator 
 import math
+import secrets
 
 from Crypto.Cipher import AES
 
@@ -189,6 +190,14 @@ def encrypt_plaintext_in_cbc_mode(p, k, iv): # p: plaintext string, k: key strin
         c.append(c_i)
 
     return b''.join(c)
+
+# Random key generation, from challenge 11 - 
+# An ECB/CBC detection oracle
+def generate_random_key():
+    k = []
+    for i in range (0, 16):
+        k.append(secrets.randbelow(256))
+    return k
 
 # Single-byte XOR cryptanalysis routine resulting
 # from challenge 03 - Single-byte XOR cipher
