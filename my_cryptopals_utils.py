@@ -72,6 +72,7 @@ def hamming_distance(a, b):
 # prevent truncation, use truncate=False
 
 # TODO there seems to be a bug here, needs further testing
+# Spotted it, the mistake is actually at the call (see count_repeating_blocks)
 
 def slice_in_blocks_of_n_size(a, n, truncate=True):
 
@@ -93,7 +94,7 @@ def slice_in_blocks_of_n_size(a, n, truncate=True):
 # from challenge 08 - Detect AES in ECB mode 
 def count_repeating_blocks(a): # a: byte array
 
-    blocks = slice_in_blocks_of_n_size(a, 2)
+    blocks = slice_in_blocks_of_n_size(a, 2) # TODO this is wrong, yields 16 bits, but should yield 16 bytes instead. It works, but is conceptually wrong
 
     repetitions = 0
 
@@ -195,9 +196,36 @@ def encrypt_plaintext_in_cbc_mode(p, k, iv): # p: plaintext string, k: key strin
 # An ECB/CBC detection oracle
 def generate_random_key():
     k = []
-    for i in range (0, 16):
+    for i in range(0, 16):
         k.append(secrets.randbelow(256))
-    return k
+    return bytes(k)
+
+# Encryption oracle function, from 
+# challenge 11 - An ECB/CBC detection oracle
+MODE_CBC = 0
+MODE_ECB = 1
+
+def encryption_oracle(plaintext):
+    
+    append_before_count = secrets.choice([5, 6, 7, 8, 9, 10])
+    append_after_count = secrets.choice([5, 6, 7, 8, 9, 10])
+
+    append_before = secrets.token_bytes(append_after_count)
+    append_after = secrets.token_bytes(append_after_count)
+
+    appended_plaintext = "{}{}{}".format(append_before, plaintext, append_after)
+
+    mode = secrets.randbelow(2) # Either 0 or 1 
+
+    ciphertext = None 
+
+    if mode == MODE_CBC:
+        ciphertext = encrypt_plaintext_in_cbc_mode(appended_plaintext, generate_random_key(), generate_random_key())
+    else:
+        appended_plaintext = pkcs_7_padding(appended_plaintext, 16) # Blocks must be 16 bytes in length 
+        ciphertext = encrypt_block_in_ecb_mode(appended_plaintext, generate_random_key())
+
+    return mode, ciphertext
 
 # Single-byte XOR cryptanalysis routine resulting
 # from challenge 03 - Single-byte XOR cipher
