@@ -6,6 +6,7 @@ import math
 import secrets
 
 from Crypto.Cipher import AES
+from collections import Counter
 
 # Useful conversion methods resulting 
 # from challenge 01 - Convert hex to Base64
@@ -226,6 +227,59 @@ def encryption_oracle(plaintext):
         ciphertext = encrypt_block_in_ecb_mode(appended_plaintext, generate_random_key())
 
     return mode, ciphertext
+
+# Consistent random key ECB encryption function, from challenge
+# 12 - Byte-at-a-time ECB decryption (Simple)
+CONSISTENT_RANDOM_KEY = generate_random_key()
+
+def consistent_key_ecb_encryption(plaintext): 
+
+    # Text to append to plaintext,
+    # before encrypting 
+    text_to_append_base_64 = "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK"
+
+    text_to_append_raw_bytes = base_64_to_raw_bytes(text_to_append_base_64)
+
+    key = CONSISTENT_RANDOM_KEY
+
+    full_plaintext = pkcs_7_padding("{}{}".format(plaintext, text_to_append_raw_bytes), 16)
+    ciphertext = encrypt_block_in_ecb_mode(full_plaintext, key)
+
+    return ciphertext
+
+# Find out given encryption function's block size,
+# from challenge 12 - Byte-at-a-time ECB decryption (Simple)
+def find_block_size(f, verbose=False):
+    
+    possible_block_sizes = [] 
+    
+    for i in range(0, 100):
+
+        my_plaintext = "A"
+        first_n_blocks = None
+
+        while True: 
+    
+            ciphertext = f(my_plaintext)
+
+            # It turns out after my_plaintext's length reaches block size
+            # the first (n = block size) bytes of the ciphertext will start 
+            # repeating on and on, every encryption round from that point on 
+
+            # To evidence, toggle this:
+            # print("[+] Ciphertext: {}".format(ciphertext))
+            if first_n_blocks != None and ciphertext.startswith(first_n_blocks): # Might still coincide. Hence running several times to account for it (reduce probability of occurrence)
+                if verbose:
+                    print("    [+] Run #{}: block size is likely {} bytes".format(i, len(first_n_blocks)))
+                possible_block_sizes.append(len(first_n_blocks))
+                break 
+            
+            first_n_blocks = ciphertext[:len(my_plaintext)]
+
+            my_plaintext = my_plaintext + "A"
+
+    occurence_count = Counter(possible_block_sizes)
+    return occurence_count.most_common(1)[0][0]
 
 # Single-byte XOR cryptanalysis routine resulting
 # from challenge 03 - Single-byte XOR cipher
