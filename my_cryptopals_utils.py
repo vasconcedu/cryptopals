@@ -113,7 +113,7 @@ def pkcs_7_padding(a, s):
     b = a 
     while len(b) % s != 0:
         b = b + "\x04"
-    return b 
+    return b
 
 # Perfoms PKCS#7 unpadding of string, 
 # from challenge 10 - Implement CBC mode
@@ -228,6 +228,10 @@ def encryption_oracle(plaintext):
 
     return mode, ciphertext
 
+
+""" [BEGIN] Challenge 12 """
+
+
 # Consistent random key ECB encryption function, from challenge
 # 12 - Byte-at-a-time ECB decryption (Simple)
 CONSISTENT_RANDOM_KEY = generate_random_key()
@@ -238,11 +242,12 @@ def consistent_key_ecb_encryption(plaintext):
     # before encrypting 
     text_to_append_base_64 = "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK"
 
-    text_to_append_raw_bytes = base_64_to_raw_bytes(text_to_append_base_64)
+    text_to_append_raw_bytes = base_64_to_raw_bytes(text_to_append_base_64).decode() # Had to add decode here o/w was getting Python string from bytes object directly (started with character 'b' and all, messed up the whole thing)
 
     key = CONSISTENT_RANDOM_KEY
 
-    full_plaintext = pkcs_7_padding("{}{}".format(plaintext, text_to_append_raw_bytes), 16)
+    full_plaintext = pkcs_7_padding("{}{}".format(plaintext, str(text_to_append_raw_bytes)), 16)
+
     ciphertext = encrypt_block_in_ecb_mode(full_plaintext, key)
 
     return ciphertext
@@ -255,7 +260,7 @@ def find_block_size(f, verbose=False):
     
     for i in range(0, 100):
 
-        my_plaintext = "A"
+        my_plaintext = "q"
         first_n_blocks = None
 
         while True: 
@@ -276,10 +281,53 @@ def find_block_size(f, verbose=False):
             
             first_n_blocks = ciphertext[:len(my_plaintext)]
 
-            my_plaintext = my_plaintext + "A"
+            my_plaintext = my_plaintext + "q"
 
     occurence_count = Counter(possible_block_sizes)
     return occurence_count.most_common(1)[0][0]
+
+# Cryptanalysis of AES in ECB mode, from 
+# challenge 12 - Byte-at-a-time ECB decryption (Simple)
+def aes_ecb_cryptanalysis_simple(f, probable_block_size=16):
+
+    plaintext = ""
+
+    input_offset_length = probable_block_size - 1
+
+    while True: 
+
+        # 3.  Knowing the block size, craft an input block that is exactly 1 byte short (for instance, if the block size is 8 bytes, make "AAAAAAA"). Think about what the oracle function is going to put in that last byte position.
+
+        input_offset = "q" * input_offset_length
+        
+        if input_offset_length == 0:
+            input_offset_length = probable_block_size - 1
+        else:
+            input_offset_length = input_offset_length - 1 
+
+        ciphertext = f(input_offset)
+
+        # 4. Make a dictionary of every possible last byte by feeding different strings to the oracle; for instance, "AAAAAAAA", "AAAAAAAB", "AAAAAAAC", remembering the first block of each invocation. 
+        
+        for i in range(0, 255):
+            
+            trial_plaintext = input_offset + plaintext + chr(i)
+            trial_ciphertext = f(trial_plaintext)
+
+            # 5. Match the output of the one-byte-short input to one of the entries in your dictionary. You've now discovered the first byte of unknown-string. 
+        
+            if trial_ciphertext.startswith(ciphertext[:len(trial_plaintext)]):
+                plaintext = plaintext + chr(i)
+                break
+            
+        if len(plaintext) == len(ciphertext): # Stop condition 
+            break
+
+    return plaintext, len(plaintext)
+
+
+""" [END] Challenge 12 """
+
 
 # Single-byte XOR cryptanalysis routine resulting
 # from challenge 03 - Single-byte XOR cipher
