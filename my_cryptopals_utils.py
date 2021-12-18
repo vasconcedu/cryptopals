@@ -586,6 +586,89 @@ class RepeatingKeyXORCryptanalysis:
 
         return best_key_size, best_normalized_average_distance
 
+# Challenge 13 - ECB cut-and-paste parser 
+
+class KeyValueParser:
+
+    key_value_string = None
+    parsed_object = None
+
+    def __init__(self, key_value_string):
+        self.key_value_string = key_value_string
+
+    def parse(self):
+        
+        parsed_object = {}
+        key_values = self.key_value_string.split("&")
+
+        for key_value in key_values:
+            key = key_value.split("=")[0]
+            value = key_value.split("=")[1]
+
+            parsed_object[key] = value
+
+        return parsed_object
+
+    def get_key_value_string(self):
+        return self.key_value_string
+
+    def set_key_value_string(self, key_value_string):
+        self.key_value_string = key_value_string
+
+    def get_parsed_object(self):
+        return self.parsed_object
+
+# Challenge 13 - ECB cut-and-paste user class 
+
+UID_COUNTER = 0
+
+class User: # "profile_for"
+
+    email = None
+    uid = None
+    role = None
+    encoded = None
+    dictionary = None
+
+    def __init__(self, email, uid=None):
+        
+        global UID_COUNTER # Could have made this a bit more elegant, but I'm happy... 
+
+        # E-mail
+        self.email = email.replace("&", "").replace("=", "") # Strip special characters 
+        
+        # UID TODO chnage back, having trouble, probably with this (yep, length is varying...)
+        if uid == None:
+            # self.uid = UID_COUNTER
+            # UID_COUNTER = UID_COUNTER + 1
+            self.uid = 10
+        
+        # Role
+        self.role = 'user' # Hardcoded 
+
+        # As encoded string 
+        self.encoded = "email={}&uid={}&role={}".format(self.email, self.uid, self.role)
+
+        # As dictionary 
+        self.dictionary = KeyValueParser(self.encoded).parse()
+    
+    def get_encoded(self):
+        return self.encoded
+
+    def get_dictionary(self):
+        return self.dictionary
+
+# Challenge 13 - ECB cut-and-paste encrypt/decrypt 
+# encoded user functions
+
+ENCODED_USER_ENCRYPTION_KEY = generate_random_key()
+
+def encrypt_encoded_user(encoded):
+    return encrypt_block_in_ecb_mode(pkcs_7_padding(encoded, 16), ENCODED_USER_ENCRYPTION_KEY)
+
+def decrypt_encoded_user(ciphertext):
+    return pkcs_7_unpad(decrypt_block_in_ecb_mode(ciphertext, ENCODED_USER_ENCRYPTION_KEY))
+
 # Test if my_cryptopals_utils was imported successfully 
 def test_my_cryptopals_utils():
     print('[my_cryptopals_utils] Good to go!')
