@@ -4,6 +4,7 @@ import base64
 import operator 
 import math
 import secrets
+import random 
 
 from Crypto.Cipher import AES
 from collections import Counter
@@ -247,6 +248,30 @@ def consistent_key_ecb_encryption(plaintext):
     key = CONSISTENT_RANDOM_KEY
 
     full_plaintext = pkcs_7_padding("{}{}".format(plaintext, str(text_to_append_raw_bytes)), 16)
+
+    ciphertext = encrypt_block_in_ecb_mode(full_plaintext, key)
+
+    return ciphertext
+
+# Consistent random key ECB encryption function, from challenge
+# 14 - Byte-at-a-time ECB decryption (Harder). This time, adds
+# a random bytes prefix to the plaintext 
+CONSISTENT_RANDOM_KEY = generate_random_key()
+
+def consistent_key_ecb_encryption_harder(plaintext): 
+
+    # Random bytes prefix 
+    random_bytes_prefix = secrets.token_bytes(secrets.randbelow(20))
+
+    # Text to append to plaintext,
+    # before encrypting 
+    text_to_append_base_64 = "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK"
+
+    text_to_append_raw_bytes = base_64_to_raw_bytes(text_to_append_base_64).decode() # Had to add decode here o/w was getting Python string from bytes object directly (started with character 'b' and all, messed up the whole thing)
+
+    key = CONSISTENT_RANDOM_KEY
+
+    full_plaintext = pkcs_7_padding("{}{}{}".format(random_bytes_prefix, plaintext, str(text_to_append_raw_bytes)), 16)
 
     ciphertext = encrypt_block_in_ecb_mode(full_plaintext, key)
 
